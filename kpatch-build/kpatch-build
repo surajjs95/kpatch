@@ -713,7 +713,7 @@ if [[ -z "$USERSRCDIR" ]] && [[ -f "$RELEASE_FILE" ]]; then
 	DISTRO="$ID"
 fi
 
-if [[ "$DISTRO" = fedora ]] || [[ "$DISTRO" = rhel ]] || [[ "$DISTRO" = ol ]] || [[ "$DISTRO" = centos ]] || [[ "$DISTRO" = openEuler ]]; then
+if [[ "$DISTRO" = fedora ]] || [[ "$DISTRO" = rhel ]] || [[ "$DISTRO" = ol ]] || [[ "$DISTRO" = centos ]] || [[ "$DISTRO" = openEuler ]] || [[ "$DISTRO" = amzn ]]; then
 	[[ -z "$VMLINUX" ]] && VMLINUX="/usr/lib/debug/lib/modules/$ARCHVERSION/vmlinux"
 	[[ -e "$VMLINUX" ]] || die "kernel-debuginfo-$ARCHVERSION not installed"
 
@@ -751,7 +751,7 @@ elif [[ -e "$KERNEL_SRCDIR"/.config ]] && [[ -e "$VERSIONFILE" ]] && [[ "$(cat "
 	echo "Using cache at $KERNEL_SRCDIR"
 
 else
-	if [[ "$DISTRO" = fedora ]] || [[ "$DISTRO" = rhel ]] || [[ "$DISTRO" = ol ]] || [[ "$DISTRO" = centos ]] || [[ "$DISTRO" = openEuler ]]; then
+	if [[ "$DISTRO" = fedora ]] || [[ "$DISTRO" = rhel ]] || [[ "$DISTRO" = ol ]] || [[ "$DISTRO" = centos ]] || [[ "$DISTRO" = openEuler ]] || [[ "$DISTRO" = amzn ]]; then
 
 		[[ "$DISTRO" = fedora ]] && echo "Fedora distribution detected"
 		[[ "$DISTRO" = rhel ]] && echo "RHEL distribution detected"
