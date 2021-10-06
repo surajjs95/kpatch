@@ -223,6 +223,28 @@ static struct rela *toc_rela(const struct rela *rela)
 				   (unsigned int)rela->addend);
 }
 
+#ifdef __aarch64__
+/*
+ * Mapping symbols are used to mark and label the transitions between code and
+ * data in elf files. They begin with a "$" dollar symbol. Don't correlate them
+ * as they often all have the same name either "$x" to mark the start of code
+ * or "$d" to mark the start of data.
+ */
+static bool kpatch_is_mapping_symbol(struct symbol *sym)
+{
+	if (sym->name && sym->name[0] == '$'
+		&& sym->type == STT_NOTYPE \
+		&& sym->bind == STB_LOCAL)
+		return 1;
+	return 0;
+}
+#else
+static int kpatch_is_mapping_symbol(struct symbol *sym)
+{
+	return 0;
+}
+#endif
+
 /*
  * When compiling with -ffunction-sections and -fdata-sections, almost every
  * symbol gets its own dedicated section.  We call such symbols "bundled"
@@ -574,6 +596,13 @@ static void kpatch_compare_correlated_section(struct section *sec)
 	/* Short circuit for mcount sections, we rebuild regardless */
 	if (!strcmp(sec->name, ".rela__mcount_loc") ||
 	    !strcmp(sec->name, "__mcount_loc")) {
+		sec->status = SAME;
+		goto out;
+	}
+
+	/* As above but for aarch64 */
+	if (!strcmp(sec->name, ".rela__patchable_function_entries") ||
+		!strcmp(sec->name, "__patchable_function_entries")) {
 		sec->status = SAME;
 		goto out;
 	}
@@ -1045,6 +1074,9 @@ static void kpatch_correlate_symbols(struct list_head *symlist_orig,
 			 */
 			if (sym_orig->type == STT_NOTYPE &&
 			    !strncmp(sym_orig->name, ".LC", 3))
+				continue;
+
+			if (kpatch_is_mapping_symbol(sym_orig))
 				continue;
 
 			/* group section symbols must have correlated sections */
@@ -2221,7 +2253,7 @@ static struct special_section special_sections[] = {
 	},
 	{
 		.name		= ".altinstructions",
-		.arch		= X86_64 | S390,
+		.arch		= X86_64 | S390 | ARM64,
 		.group_size	= altinstructions_group_size,
 	},
 	{
