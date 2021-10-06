@@ -1636,7 +1636,7 @@ static void kpatch_check_func_profiling_calls(struct kpatch_elf *kelf)
 		    (sym->parent && sym->parent->status == CHANGED))
 			continue;
 		if (!sym->twin->has_func_profiling) {
-			log_normal("function %s has no fentry/mcount call, unable to patch\n",
+			log_normal("function %s doesn't have patchable function entry, unable to patch\n",
 				   sym->name);
 			errs++;
 		}
@@ -3800,6 +3800,7 @@ static void kpatch_find_func_profiling_calls(struct kpatch_elf *kelf)
 	struct symbol *sym;
 	struct rela *rela;
 	unsigned char *insn;
+	struct section *sec;
 	list_for_each_entry(sym, &kelf->symbols, list) {
 		if (sym->type != STT_FUNC || !sym->sec || !sym->sec->rela)
 			continue;
@@ -3832,6 +3833,22 @@ static void kpatch_find_func_profiling_calls(struct kpatch_elf *kelf)
 				insn[4] == 0x00 && insn[5] == 0x00)
 				sym->has_func_profiling = 1;
 			break;
+		case ARM64:
+			sec = find_section_by_name(&kelf->sections,
+					      "__patchable_function_entries");
+			/*
+			 * If we can't find the __patchable_function_entries section or
+			 * there are no relocations in it then not patchable.
+			 */
+			if (!sec || !sec->rela)
+				return;
+			list_for_each_entry(rela, &sec->rela->relas, list) {
+				if (rela->sym->sec && sym->sec == rela->sym->sec) {
+					sym->has_func_profiling = 1;
+					break;
+				}
+			}
+
 		default:
 			ERROR("unsupported arch");
 		}
