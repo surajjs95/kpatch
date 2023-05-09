@@ -347,6 +347,7 @@ find_special_section_data() {
 		"x86_64")
 			check[a]=true					# alt_instr
 			kernel_version_gte 5.10.0 && check[s]=true	# static_call_site
+			[[ -n "$CONFIG_PARAVIRT" ]] && check[p]=true	# paravirt_patch_site
 			;;
 		"ppc64le")
 			check[f]=true					# fixup_entry
@@ -363,7 +364,6 @@ find_special_section_data() {
 	[[ -n "$CONFIG_PRINTK_INDEX" ]] && check[i]=true	# pi_entry
 	[[ -n "$CONFIG_JUMP_LABEL" ]] && check[j]=true		# jump_entry
 	[[ -n "$CONFIG_UNWINDER_ORC" ]] && check[o]=true	# orc_entry
-	[[ -n "$CONFIG_PARAVIRT" ]] && check[p]=true		# paravirt_patch_site
 
 	local c AWK_OPTIONS
 	for c in "${!check[@]}"; do
